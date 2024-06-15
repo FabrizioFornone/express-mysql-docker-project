@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  app:
+    container_name: express-app
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=mydb
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npx nodemon -L --watch src src/index.ts
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  mysql:
+    container_name: mysql-express-app
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: 'mydb'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+volumes:
+  db-data:
