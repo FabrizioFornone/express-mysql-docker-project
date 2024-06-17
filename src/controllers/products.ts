@@ -86,3 +86,34 @@ export const buyProductsController = async (
     res.status(500).json({ error: "Error purchasing" });
   }
 };
+
+export const getPurchasesController = async (
+  req: Request & { username?: string },
+  res: Response
+) => {
+  const { username } = req;
+
+  const user = await User.findOne({ where: { username } });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const purchases = await Purchase.findAll({
+    where: { user_id: user.user_id },
+    attributes: ["product_id", "quantity", "total_price"],
+    include: [
+      {
+        model: Product,
+        attributes: ["name", "description"],
+        include: [{ model: Asset, attributes: ["photo_url"] }],
+      },
+    ],
+  });
+
+  if (!purchases) {
+    return res.status(404).json({ error: "Purchases not found" });
+  }
+
+  res.status(200).json({ purchases: purchases });
+};
