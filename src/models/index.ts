@@ -1,5 +1,3 @@
-import User from "./user";
-import Purchase from "./purchase";
-import { Product, Asset, PriceCut } from "./associations";
+import { Product, Asset, PriceCut, User, Purchase } from "./associations";
 
 export { User, Product, Purchase, Asset, PriceCut };

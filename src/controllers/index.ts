@@ -1,4 +1,9 @@
-import { loginController, registerController } from "./auth";
-import { getProductsController } from "./products";
+import { loginController, registerController } from "./users";
+import { getProductsController, buyProductsController } from "./products";
 
-export { loginController, registerController, getProductsController };
+export {
+  loginController,
+  registerController,
+  getProductsController,
+  buyProductsController,
+};

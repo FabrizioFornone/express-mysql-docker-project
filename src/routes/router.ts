@@ -6,6 +6,7 @@ import {
   loginController,
   registerController,
   getProductsController,
+  buyProductsController,
 } from "../controllers";
 
 export const router = express.Router();
@@ -19,3 +20,5 @@ router.post("/register", registerController);
 router.post("/login", loginController);
 
 router.get("/getProducts", getProductsController);
+
+router.post("/buyProducts", authenticateToken, buyProductsController);
