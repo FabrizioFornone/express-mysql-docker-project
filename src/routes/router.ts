@@ -1,7 +1,12 @@
 import express, { Request, Response } from "express";
 
-import { loginController, registerController } from "../controllers/auth";
-import { authenticateToken } from "../middlewares/auth";
+import { authenticateToken } from "../middleware/auth";
+
+import {
+  loginController,
+  registerController,
+  getProductsController,
+} from "../controllers";
 
 export const router = express.Router();
 
@@ -12,3 +17,5 @@ router.get("/", authenticateToken, (req: Request, res: Response) => {
 router.post("/register", registerController);
 
 router.post("/login", loginController);
+
+router.get("/getProducts", getProductsController);
