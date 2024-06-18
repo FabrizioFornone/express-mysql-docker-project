@@ -8,11 +8,22 @@ To start the app and the database, run the following command in the root directo
 docker-compose up --build
 ````
 
-After that, run the following npm scripts to populate the database:
+The first time the `init_script.sh` will run automatically also migrations and seeders.
+
+## DB Rollback
+
+**If you need to rollback the database** run the following npm script from a terminal:
 
 ````
-npm run db-init
-npm run db-seed
+npm run db-down
 ````
+
+After that you can run:
+
+````
+docker-compose down
+````
+
+Then remove the `db-initialized.flag` file from the root of the repo and go back to **Getting Started** section
 
 
