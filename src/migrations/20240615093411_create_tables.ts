@@ -21,6 +21,7 @@ export async function up(knex: Knex): Promise<void> {
     table.increments("price_cut_id").primary();
     table.integer("product_id").unsigned().notNullable();
     table.foreign("product_id").references("products.product_id");
+    table.string("name").notNullable();
     table.decimal("price", 10, 2).notNullable();
 
     table.timestamps(true, true);
@@ -39,8 +40,8 @@ export async function up(knex: Knex): Promise<void> {
     table.increments("purchase_id").primary();
     table.integer("user_id").unsigned().notNullable();
     table.foreign("user_id").references("users.user_id");
-    table.integer("product_id").unsigned().notNullable();
-    table.foreign("product_id").references("products.product_id");
+    table.integer("price_cut_id").unsigned().notNullable();
+    table.foreign("price_cut_id").references("price_cuts.price_cut_id");
     table.integer("quantity").notNullable();
     table.decimal("total_price", 10, 2).notNullable();
 

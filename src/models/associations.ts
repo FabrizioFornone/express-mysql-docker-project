@@ -10,8 +10,8 @@ Asset.belongsTo(Product, { foreignKey: "product_id" });
 Product.hasMany(PriceCut, { foreignKey: "product_id" });
 PriceCut.belongsTo(Product, { foreignKey: "product_id" });
 
-Product.hasMany(Purchase, { foreignKey: "product_id" });
-Purchase.belongsTo(Product, { foreignKey: "product_id" });
+PriceCut.hasMany(Purchase, { foreignKey: "price_cut_id" });
+Purchase.belongsTo(PriceCut, { foreignKey: "price_cut_id" });
 
 User.hasMany(Purchase, { foreignKey: "user_id" });
 Purchase.belongsTo(User, { foreignKey: "user_id" });

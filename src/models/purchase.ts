@@ -1,13 +1,10 @@
 import { Model, DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
-import User from "../models/user";
-import Product from "../models/product";
-
 class Purchase extends Model {
   public purchase_id!: number;
   public user_id!: number;
-  public product_id!: number;
+  public price_cut_id!: number;
   public quantity!: number;
   public total_price!: number;
   public created_at!: Date;
@@ -25,18 +22,18 @@ Purchase.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
-        model: User,
+        model: "users",
         key: "user_id",
       },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",
     },
-    product_id: {
+    price_cut_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
-        model: Product,
-        key: "product_id",
+        model: "price_cuts",
+        key: "price_cut_id",
       },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",

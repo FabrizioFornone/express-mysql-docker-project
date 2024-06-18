@@ -7,14 +7,10 @@ import {
   registerController,
   getProductsController,
   buyProductsController,
-  getPurchasesController
+  getPurchasesController,
 } from "../controllers";
 
 export const router = express.Router();
-
-router.get("/", authenticateToken, (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
-});
 
 router.post("/register", registerController);
 

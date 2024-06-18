@@ -4,6 +4,7 @@ import { sequelize } from "../config/database";
 class PriceCut extends Model {
   public price_cut_id!: number;
   public product_id!: number;
+  public name!: string;
   public price!: number;
   public created_at!: Date;
   public updated_at!: Date;
@@ -25,6 +26,10 @@ PriceCut.init(
       },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",
+    },
+    name: {
+      type: new DataTypes.STRING(128),
+      allowNull: false,
     },
     price: {
       type: DataTypes.DECIMAL(10, 2),

@@ -14,17 +14,19 @@ export async function seed(knex: Knex): Promise<void> {
 
   const products = await knex("products").select("product_id");
 
-  for (const product of products) {
-    const priceCuts = [];
-    for (let i = 0; i < 3; i++) {
-      priceCuts.push({
-        product_id: product.product_id,
-        price: (Math.random() * 100).toFixed(2), // Generate random price with 2 decimal places
-      });
-    }
+  const priceNames = ["bronze", "silver", "gold", "platinum"];
 
-    await knex("price_cuts").insert(priceCuts);
-  }
+  const priceCuts = products.flatMap((product) => {
+    const randomPrice = Math.random() * 100;
+
+    return priceNames.map((name, i) => ({
+      product_id: product.product_id,
+      name,
+      price: (randomPrice + 5 * i).toFixed(2),
+    }));
+  });
+
+  await knex("price_cuts").insert(priceCuts);
 
   const assetsUrls = [
     [

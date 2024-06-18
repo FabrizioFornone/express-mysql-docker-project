@@ -41,7 +41,7 @@ export const registerController = async (req: Request, res: Response) => {
 
     const sanitizedUser = newUser.username;
 
-    return res.status(201).json(sanitizedUser);
+    return res.status(201).json({ username: sanitizedUser });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error creating user" });
