@@ -209,7 +209,7 @@ export const buyProductsController = async (
  *     security:
  *       - bearerAuth: []
  *     summary: Retrieves all purchases for a user.
- *     description: Returns a list of all purchases made by the specified user, including details of the products and price cuts.
+ *     description: Returns a list of all purchases made by the user logged in, including details of the products and price cuts.
  *     tags:
  *       - Products
  *     responses:

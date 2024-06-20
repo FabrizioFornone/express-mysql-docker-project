@@ -11,7 +11,7 @@ import * as yup from "yup";
  * /register:
  *   post:
  *     summary: Register a new user
- *     tags: [User]
+ *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
@@ -90,7 +90,7 @@ export const registerController = async (req: Request, res: Response) => {
  * /login:
  *   post:
  *     summary: Login a user.
- *     tags: [User]
+ *     tags: [Users]
  *     description: Validates the user's credentials and generates a JWT token if successful.
  *     requestBody:
  *       required: true
@@ -98,6 +98,9 @@ export const registerController = async (req: Request, res: Response) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - username
+ *               - password
  *             properties:
  *               username:
  *                 type: string
