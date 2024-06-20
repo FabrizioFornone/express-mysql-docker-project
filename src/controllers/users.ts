@@ -6,6 +6,43 @@ import User from "../models/user";
 
 import * as yup from "yup";
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: johndoe
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: Password123!
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                   example: johndoe
+ *       400:
+ *         description: Bad request
+ */
 export const registerController = async (req: Request, res: Response) => {
   const { body } = req;
 
@@ -48,6 +85,44 @@ export const registerController = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login a user.
+ *     tags: [User]
+ *     description: Validates the user's credentials and generates a JWT token if successful.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the user.
+ *               password:
+ *                 type: string
+ *                 description: The password of the user.
+ *     responses:
+ *       '200':
+ *         description: Successful login. Returns a JWT token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authentication.
+ *       '400':
+ *         description: Bad request. Invalid username or password.
+ *       '401':
+ *         description: Unauthorized. Invalid credentials.
+ *       '500':
+ *         description: Internal server error.
+ */
 export const loginController = async (req: Request, res: Response) => {
   const { body } = req;
 
