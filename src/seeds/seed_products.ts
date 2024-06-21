@@ -1,4 +1,16 @@
 import { Knex } from "knex";
+import type { Product, PriceCut } from "../models";
+
+interface PriceCutData {
+  product_id: number;
+  name: string;
+  price: string;
+}
+
+interface AssetData {
+  product_id: number;
+  photo_url: string;
+}
 
 export async function seed(knex: Knex): Promise<void> {
   await knex("price_cuts").del();
@@ -12,14 +24,14 @@ export async function seed(knex: Knex): Promise<void> {
     { name: "Travel Card", description: "A card for purchasing travels" },
   ]);
 
-  const products = await knex("products").select("product_id");
+  const products: Product[] = await knex("products").select("product_id");
 
-  const priceNames = ["bronze", "silver", "gold", "platinum"];
+  const priceNames: string[] = ["bronze", "silver", "gold", "platinum"];
 
-  const priceCuts = products.flatMap((product) => {
-    const randomPrice = Math.random() * 100;
+  const priceCuts: PriceCutData[] = products.flatMap((product: Product) => {
+    const randomPrice: number = Math.random() * 100;
 
-    return priceNames.map((name, i) => ({
+    return priceNames.map((name: string, i: number) => ({
       product_id: product.product_id,
       name,
       price: (randomPrice + 5 * i).toFixed(2),
@@ -28,7 +40,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   await knex("price_cuts").insert(priceCuts);
 
-  const assetsUrls = [
+  const assetsUrls: string[][] = [
     [
       "https://images.pexels.com/photos/5926431/pexels-photo-5926431.jpeg",
       "https://images.pexels.com/photos/697224/pexels-photo-697224.jpeg",
@@ -47,17 +59,19 @@ export async function seed(knex: Knex): Promise<void> {
     ],
   ];
 
-  const assets = products.flatMap((product, i) => {
-    // Ensure we are not accessing an index that's out of bounds
-    if (i < assetsUrls.length) {
-      const [firstPhotoUrl, secondPhotoUrl] = assetsUrls[i];
-      return [
-        { product_id: product.product_id, photo_url: firstPhotoUrl },
-        { product_id: product.product_id, photo_url: secondPhotoUrl },
-      ];
+  const assets: AssetData[] = products.flatMap(
+    (product: Product, i: number) => {
+      // Ensure we are not accessing an index that's out of bounds
+      if (i < assetsUrls.length) {
+        const [firstPhotoUrl, secondPhotoUrl] = assetsUrls[i];
+        return [
+          { product_id: product.product_id, photo_url: firstPhotoUrl },
+          { product_id: product.product_id, photo_url: secondPhotoUrl },
+        ];
+      }
+      return [];
     }
-    return [];
-  });
+  );
 
   await knex("assets").insert(assets);
 }
