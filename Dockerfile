@@ -16,5 +16,3 @@ RUN npm run build
 EXPOSE 3000
 
 ENTRYPOINT ["./init_script.sh"]
-
-CMD ["node", "dist/app.js"]

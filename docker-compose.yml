@@ -41,9 +41,9 @@ services:
           "root",
           "--password=password",
         ]
-      timeout: 60s
-      retries: 10
-      start_period: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
     volumes:
       - db-data:/var/lib/mysql
     networks:
