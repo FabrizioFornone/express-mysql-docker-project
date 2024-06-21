@@ -1,7 +1,7 @@
 {
-  "name": "docker-test",
+  "name": "express-mysql-docker-project",
   "version": "1.0.0",
-  "description": "",
+  "description": "express-mysql-docker-project server application",
   "main": "index.js",
   "scripts": {
     "build": "npx tsc",
