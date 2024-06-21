@@ -5,9 +5,9 @@ export const authenticateToken = (
   req: Request & { username?: string },
   res: Response,
   next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+): void | Response => {
+  const authHeader: string | undefined = req.headers.authorization;
+  const token: string | undefined = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
   if (!token) {
     return res.status(401).json({ error: "No token provided" });

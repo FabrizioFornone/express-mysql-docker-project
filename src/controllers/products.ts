@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import { Product, Asset, PriceCut, Purchase, User } from "../models";
+import {
+  ProductWithAssociations,
+  PurchaseWithAssociations,
+  SanitizedPurchase,
+} from "../types";
 
 import * as yup from "yup";
 import { validateFields, convertToObject } from "../utils";
@@ -31,14 +36,6 @@ import { validateFields, convertToObject } from "../utils";
  *                   description:
  *                     type: string
  *                     description: The description of the product.
- *                   created_at:
- *                     type: string
- *                     format: date-time
- *                     description: The date and time when the product was created.
- *                   updated_at:
- *                     type: string
- *                     format: date-time
- *                     description: The date and time when the product was last updated.
  *                   Assets:
  *                     type: array
  *                     items:
@@ -61,9 +58,13 @@ import { validateFields, convertToObject } from "../utils";
  *       '500':
  *         description: Internal server error.
  */
-export const getProductsController = async (req: Request, res: Response) => {
+export const getProductsController = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const products = await Product.findAll({
+    const products = (await Product.findAll({
+      attributes: ["product_id", "name", "description"],
       include: [
         {
           model: Asset,
@@ -74,12 +75,12 @@ export const getProductsController = async (req: Request, res: Response) => {
           attributes: ["name", "price"],
         },
       ],
-    });
+    })) as ProductWithAssociations[];
 
-    res.status(200).json(products);
-  } catch (error) {
+    return res.status(200).json(products);
+  } catch (error: unknown) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -158,45 +159,51 @@ export const buyProductsController = async (
     price_cut_name: yup.string().required("price cut name is required"),
   });
 
-  const validationResponse: any = await validateFields(registerSchema, body);
+  const validationResponse = await validateFields(registerSchema, body);
 
-  if (validationResponse.result) {
+  if (validationResponse?.result) {
     return res.status(400).json(convertToObject(validationResponse));
   }
 
-  const { product_id, quantity, price_cut_name: name } = body;
+  const {
+    product_id,
+    quantity,
+    price_cut_name: name,
+  }: { product_id: number; quantity: number; price_cut_name: string } = body;
 
-  const priceCut = await PriceCut.findOne({ where: { name, product_id } });
+  const priceCut: PriceCut | null = await PriceCut.findOne({
+    where: { name, product_id },
+  });
 
   if (!priceCut) {
     return res.status(404).json({ error: "Product not available" });
   }
 
-  const user = await User.findOne({ where: { username } });
+  const user: User | null = await User.findOne({ where: { username } });
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  const totalPrice = priceCut.price * quantity;
+  const totalPrice: number = priceCut.price * quantity;
 
   try {
-    const purchase = await Purchase.create({
+    const purchase: Purchase = await Purchase.create({
       user_id: user.user_id,
       quantity,
       price_cut_id: priceCut.price_cut_id,
       total_price: totalPrice,
     });
 
-    const sanitizedPurchase = {
-      username: username,
+    const sanitizedPurchase: SanitizedPurchase = {
+      username: user.username,
       price_cut_name: priceCut.name,
       price: priceCut.price,
       quantity: purchase.quantity,
       total_price: purchase.total_price.toString(),
     };
     res.status(201).json({ purchase: sanitizedPurchase });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
     res.status(500).json({ error: "Error purchasing" });
   }
@@ -268,13 +275,13 @@ export const getPurchasesController = async (
 ) => {
   const { username } = req;
 
-  const user = await User.findOne({ where: { username } });
+  const user: User | null = await User.findOne({ where: { username } });
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  const purchases = await Purchase.findAll({
+  const purchases = (await Purchase.findAll({
     where: { user_id: user.user_id },
     attributes: ["quantity", "total_price"],
     include: [
@@ -295,7 +302,7 @@ export const getPurchasesController = async (
         ],
       },
     ],
-  });
+  })) as PurchaseWithAssociations[];
 
   if (!purchases) {
     return res.status(404).json({ error: "Purchases not found" });

@@ -27,7 +27,7 @@ const start = async (): Promise<void> => {
         `[server]: Server is running at http://localhost:${port}, go to http://localhost:${port}/api-docs to see the swagger documentation.`
       );
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
     process.exit(1);
   }

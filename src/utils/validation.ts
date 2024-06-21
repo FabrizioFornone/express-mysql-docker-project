@@ -1,4 +1,6 @@
-interface createValidationErrorResponseContentReturn {
+import * as yup from "yup";
+
+interface ValidationErrorResponse {
   result: string;
   validation_errors: {
     validation_error_field: string;
@@ -8,7 +10,7 @@ interface createValidationErrorResponseContentReturn {
 
 const createValidationErrorResponseContent = (
   validationError: any
-): createValidationErrorResponseContentReturn => {
+): ValidationErrorResponse => {
   return {
     result: "validation_error",
     validation_errors: validationError.inner.map((err: any) => {
@@ -20,13 +22,15 @@ const createValidationErrorResponseContent = (
   };
 };
 
-const validateFields = async (schema: any, body: any) => {
+const validateFields = async (
+  schema: yup.ObjectSchema<any>,
+  body: any
+): Promise<void | ValidationErrorResponse> => {
   try {
-    return await schema.validateSync(body, { abortEarly: false });
-  } catch (err) {
-    const validationResponse = createValidationErrorResponseContent(err);
-
-    return validationResponse;
+    await schema.validateSync(body, { abortEarly: false });
+    return;
+  } catch (error: unknown) {
+    return createValidationErrorResponseContent(error);
   }
 };
 

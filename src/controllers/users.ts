@@ -43,7 +43,10 @@ import * as yup from "yup";
  *       400:
  *         description: Bad request
  */
-export const registerController = async (req: Request, res: Response) => {
+export const registerController = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { body } = req;
 
   const registerSchema = yup.object().shape({
@@ -54,32 +57,34 @@ export const registerController = async (req: Request, res: Response) => {
       .min(8, "Password must be at least 8 characters"),
   });
 
-  const validationResponse: any = await validateFields(registerSchema, body);
+  const validationResponse = await validateFields(registerSchema, body);
 
-  if (validationResponse.result) {
+  if (validationResponse?.result) {
     return res.status(400).json(convertToObject(validationResponse));
   }
 
-  const { username, password } = body;
+  const { username, password }: { username: string; password: string } = body;
 
-  if (await User.findOne({ where: { username } })) {
+  const existingUser: User | null = await User.findOne({ where: { username } });
+
+  if (existingUser) {
     return res
       .status(400)
       .json({ error: `Username ${username} already exists` });
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword: string = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
+    const newUser: User = await User.create({
       username,
       hashed_password: hashedPassword,
     });
 
-    const sanitizedUser = newUser.username;
+    const sanitizedUser: string = newUser.username;
 
     return res.status(201).json({ username: sanitizedUser });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
     return res.status(500).json({ error: "Error creating user" });
   }
@@ -126,7 +131,10 @@ export const registerController = async (req: Request, res: Response) => {
  *       '500':
  *         description: Internal server error.
  */
-export const loginController = async (req: Request, res: Response) => {
+export const loginController = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { body } = req;
 
   const loginSchema = yup.object().shape({
@@ -134,35 +142,38 @@ export const loginController = async (req: Request, res: Response) => {
     password: yup.string().required("Password is required"),
   });
 
-  const validationResponse: any = await validateFields(loginSchema, body);
+  const validationResponse = await validateFields(loginSchema, body);
 
-  if (validationResponse.result) {
+  if (validationResponse?.result) {
     return res.status(400).json(convertToObject(validationResponse));
   }
 
-  const { username, password } = body;
+  const { username, password }: { username: string; password: string } = body;
 
   try {
-    const user = await User.findOne({ where: { username } });
+    const user: User | null = await User.findOne({ where: { username } });
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.hashed_password);
+    const passwordMatch: boolean = await bcrypt.compare(
+      password,
+      user.hashed_password
+    );
 
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
+    const token: string = jwt.sign(
       { username: user.username },
       process.env.JWT_SECRET!,
       { expiresIn: "10h" }
     );
 
     return res.status(200).json({ token });
-  } catch (error) {
+  } catch (error: unknown) {
     return res.status(500).json({ error: "Error logging in" });
   }
 };
