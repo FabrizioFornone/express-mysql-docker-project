@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+
 import { validateFields, convertToObject } from "../utils";
-import User from "../models/user";
+import { registerService, loginService } from "../services";
+import { ErrorResponse, SuccessResponse } from "../types";
 
 import * as yup from "yup";
 
@@ -31,7 +31,7 @@ import * as yup from "yup";
  *                 example: Password123!
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User registered successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -41,7 +41,11 @@ import * as yup from "yup";
  *                   type: string
  *                   example: johndoe
  *       400:
- *         description: Bad request
+ *         description: Bad request. Validation error for the input fields.
+ *       409:
+ *         description: Username already exists.
+ *       500:
+ *         description: Internal server error.
  */
 export const registerController = async (
   req: Request,
@@ -65,29 +69,15 @@ export const registerController = async (
 
   const { username, password }: { username: string; password: string } = body;
 
-  const existingUser: User | null = await User.findOne({ where: { username } });
+  const result = await registerService(username, password);
 
-  if (existingUser) {
-    return res
-      .status(400)
-      .json({ error: `Username ${username} already exists` });
+  if (result.error) {
+    const { code, errorMessage } = result as ErrorResponse;
+    return res.status(code).json({ error: errorMessage });
   }
 
-  try {
-    const hashedPassword: string = await bcrypt.hash(password, 10);
-
-    const newUser: User = await User.create({
-      username,
-      hashed_password: hashedPassword,
-    });
-
-    const sanitizedUser: string = newUser.username;
-
-    return res.status(201).json({ username: sanitizedUser });
-  } catch (error: unknown) {
-    console.error(error);
-    return res.status(500).json({ error: "Error creating user" });
-  }
+  const { data, code } = result as SuccessResponse<{ username: string }>;
+  return res.status(code).json(data);
 };
 
 /**
@@ -125,7 +115,7 @@ export const registerController = async (
  *                   type: string
  *                   description: JWT token for authentication.
  *       '400':
- *         description: Bad request. Invalid username or password.
+ *         description: Bad request. Validation error for the input fields.
  *       '401':
  *         description: Unauthorized. Invalid credentials.
  *       '500':
@@ -150,30 +140,13 @@ export const loginController = async (
 
   const { username, password }: { username: string; password: string } = body;
 
-  try {
-    const user: User | null = await User.findOne({ where: { username } });
+  const result = await loginService(username, password);
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const passwordMatch: boolean = await bcrypt.compare(
-      password,
-      user.hashed_password
-    );
-
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const token: string = jwt.sign(
-      { username: user.username },
-      process.env.JWT_SECRET!,
-      { expiresIn: "10h" }
-    );
-
-    return res.status(200).json({ token });
-  } catch (error: unknown) {
-    return res.status(500).json({ error: "Error logging in" });
+  if (result.error) {
+    const { code, errorMessage } = result as ErrorResponse;
+    return res.status(code).json({ error: errorMessage });
   }
+
+  const { data, code } = result as SuccessResponse<{ token: string }>;
+  return res.status(code).json(data);
 };

@@ -1,13 +1,18 @@
 import { Request, Response } from "express";
-import { Product, Asset, PriceCut, Purchase, User } from "../models";
+import * as yup from "yup";
+import { validateFields, convertToObject } from "../utils";
 import {
+  buyProductsService,
+  getProductsService,
+  getPurchasesService,
+} from "../services";
+import {
+  ErrorResponse,
   ProductWithAssociations,
   PurchaseWithAssociations,
   SanitizedPurchase,
+  SuccessResponse,
 } from "../types";
-
-import * as yup from "yup";
-import { validateFields, convertToObject } from "../utils";
 
 /**
  * @swagger
@@ -23,38 +28,42 @@ import { validateFields, convertToObject } from "../utils";
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   product_id:
- *                     type: number
- *                     description: The unique identifier for the product.
- *                   name:
- *                     type: string
- *                     description: The name of the product.
- *                   description:
- *                     type: string
- *                     description: The description of the product.
- *                   Assets:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         photo_url:
- *                           type: string
- *                           description: The URL of the product's photo.
- *                   PriceCuts:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         name:
- *                           type: string
- *                           description: The name of the price cut.
- *                         price:
- *                           type: number
- *                           description: The discounted price.
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   description: The list of products.
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       product_id:
+ *                         type: number
+ *                         description: The unique identifier for the product.
+ *                       name:
+ *                         type: string
+ *                         description: The name of the product.
+ *                       description:
+ *                         type: string
+ *                         description: The description of the product.
+ *                       Assets:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             photo_url:
+ *                               type: string
+ *                               description: The URL of the product's photo.
+ *                       PriceCuts:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               description: The name of the price cut.
+ *                             price:
+ *                               type: number
+ *                               description: The price.
  *       '500':
  *         description: Internal server error.
  */
@@ -62,26 +71,17 @@ export const getProductsController = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  try {
-    const products = (await Product.findAll({
-      attributes: ["product_id", "name", "description"],
-      include: [
-        {
-          model: Asset,
-          attributes: ["photo_url"],
-        },
-        {
-          model: PriceCut,
-          attributes: ["name", "price"],
-        },
-      ],
-    })) as ProductWithAssociations[];
+  const result = await getProductsService();
 
-    return res.status(200).json(products);
-  } catch (error: unknown) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+  if (result.error) {
+    const { code, errorMessage } = result as ErrorResponse;
+    return res.status(code).json({ error: errorMessage });
   }
+
+  const { data, code } = result as SuccessResponse<{
+    data: ProductWithAssociations[];
+  }>;
+  return res.status(code).json(data);
 };
 
 /**
@@ -122,7 +122,7 @@ export const getProductsController = async (
  *             schema:
  *               type: object
  *               properties:
- *                 purchase:
+ *                 data:
  *                   type: object
  *                   properties:
  *                     username:
@@ -171,42 +171,22 @@ export const buyProductsController = async (
     price_cut_name: name,
   }: { product_id: number; quantity: number; price_cut_name: string } = body;
 
-  const priceCut: PriceCut | null = await PriceCut.findOne({
-    where: { name, product_id },
-  });
+  const result = await buyProductsService(
+    product_id,
+    quantity,
+    name,
+    username as string
+  );
 
-  if (!priceCut) {
-    return res.status(404).json({ error: "Product not available" });
+  if (result.error) {
+    const { code, errorMessage } = result as ErrorResponse;
+    return res.status(code).json({ error: errorMessage });
   }
 
-  const user: User | null = await User.findOne({ where: { username } });
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  const totalPrice: number = priceCut.price * quantity;
-
-  try {
-    const purchase: Purchase = await Purchase.create({
-      user_id: user.user_id,
-      quantity,
-      price_cut_id: priceCut.price_cut_id,
-      total_price: totalPrice,
-    });
-
-    const sanitizedPurchase: SanitizedPurchase = {
-      username: user.username,
-      price_cut_name: priceCut.name,
-      price: priceCut.price,
-      quantity: purchase.quantity,
-      total_price: purchase.total_price.toString(),
-    };
-    res.status(201).json({ purchase: sanitizedPurchase });
-  } catch (error: unknown) {
-    console.error(error);
-    res.status(500).json({ error: "Error purchasing" });
-  }
+  const { data, code } = result as SuccessResponse<{
+    data: SanitizedPurchase;
+  }>;
+  return res.status(code).json(data);
 };
 
 /**
@@ -227,7 +207,7 @@ export const buyProductsController = async (
  *             schema:
  *               type: object
  *               properties:
- *                 purchases:
+ *                 data:
  *                   type: array
  *                   items:
  *                     type: object
@@ -275,38 +255,15 @@ export const getPurchasesController = async (
 ) => {
   const { username } = req;
 
-  const user: User | null = await User.findOne({ where: { username } });
+  const result = await getPurchasesService(username as string);
 
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+  if (result.error) {
+    const { code, errorMessage } = result as ErrorResponse;
+    return res.status(code).json({ error: errorMessage });
   }
 
-  const purchases = (await Purchase.findAll({
-    where: { user_id: user.user_id },
-    attributes: ["quantity", "total_price"],
-    include: [
-      {
-        model: PriceCut,
-        attributes: ["name", "price"],
-        include: [
-          {
-            model: Product,
-            attributes: ["name", "description"],
-            include: [
-              {
-                model: Asset,
-                attributes: ["photo_url"],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  })) as PurchaseWithAssociations[];
-
-  if (!purchases) {
-    return res.status(404).json({ error: "Purchases not found" });
-  }
-
-  res.status(200).json({ purchases: purchases });
+  const { data, code } = result as SuccessResponse<{
+    data: PurchaseWithAssociations[];
+  }>;
+  return res.status(code).json(data);
 };
