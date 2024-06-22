@@ -132,7 +132,7 @@ export const getProductsController = async (
  *                       type: string
  *                       description: The name of the price cut.
  *                     price:
- *                       type: number
+ *                       type: string
  *                       description: The price per unit after the price cut.
  *                     quantity:
  *                       type: number
@@ -216,7 +216,7 @@ export const buyProductsController = async (
  *                         type: number
  *                         description: The quantity of the purchased item.
  *                       total_price:
- *                         type: number
+ *                         type: string
  *                         description: The total price of the purchase.
  *                       PriceCut:
  *                         type: object
@@ -225,7 +225,7 @@ export const buyProductsController = async (
  *                             type: string
  *                             description: The name of the price cut applied to the purchase.
  *                           price:
- *                             type: number
+ *                             type: string
  *                             description: The price per unit after the price cut.
  *                           Product:
  *                             type: object

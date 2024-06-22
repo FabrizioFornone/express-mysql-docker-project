@@ -8,7 +8,7 @@ export interface PurchaseWithAssociations extends Purchase {
 export interface SanitizedPurchase {
   username: string;
   price_cut_name: string;
-  price: number;
+  price: string;
   quantity: number;
   total_price: string;
 }

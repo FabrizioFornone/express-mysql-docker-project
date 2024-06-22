@@ -5,7 +5,7 @@ class PriceCut extends Model {
   public price_cut_id!: number;
   public product_id!: number;
   public name!: string;
-  public price!: number;
+  public price!: string;
   public created_at!: Date;
   public updated_at!: Date;
 }

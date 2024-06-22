@@ -66,22 +66,26 @@ export const buyProductsService = async (
     };
   }
 
-  const totalPrice: number = priceCut.price * quantity;
+  const priceCutNumber: number = parseFloat(priceCut.price);
+
+  const totalPrice: number = priceCutNumber * quantity;
+
+  const roundedTotalPrice = Number(totalPrice.toFixed(2));
 
   try {
     const purchase: Purchase = await Purchase.create({
       user_id: user.user_id,
       quantity,
       price_cut_id: priceCut.price_cut_id,
-      total_price: totalPrice,
+      total_price: roundedTotalPrice,
     });
 
     const sanitizedPurchase: SanitizedPurchase = {
       username: user.username,
       price_cut_name: priceCut.name,
-      price: priceCut.price,
+      price: priceCutNumber.toFixed(2),
       quantity: purchase.quantity,
-      total_price: purchase.total_price.toString(),
+      total_price: purchase.total_price.toFixed(2),
     };
 
     return {
