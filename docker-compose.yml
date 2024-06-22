@@ -12,6 +12,7 @@ services:
       - DB_NAME=mydb
     volumes:
       - ./:/usr/src/app
+      # prevent overwriting the node_modules directory inside the container with the node_modules directory from the host
       - /usr/src/app/node_modules
     depends_on:
       mysql:
